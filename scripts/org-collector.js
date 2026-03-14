@@ -178,7 +178,7 @@ async function processReleases(fullName, name) {
       url: r.html_url,
       description:
         `**${r.name || "Unnamed release"}**\n` +
-        `${r.body ? r.body.substring(0, 1800) : "_No release notes provided._"}`,
+        `${r.body ? (r.body.length > 1800 ? r.body.substring(0, 1800) + "…" : r.body) : "_No release notes provided._"}`,
       color: COLORS.RELEASE,
       thumbnail: { url: LOGO },
       fields: [
@@ -230,7 +230,7 @@ async function processCommits(fullName, name, defaultBranch) {
         title: `📝 Commit \`${shortSha}\` in ${fullName}`,
         url: commit.html_url,
         description:
-          `**Message:** ${message.substring(0, 1000)}\n\n` +
+          `**Message:** ${message.length > 1000 ? message.substring(0, 1000) + "…" : message}\n\n` +
           `*Branch:* \`${defaultBranch}\``,
         color: COLORS.COMMIT,
         thumbnail: { url: LOGO },
@@ -275,7 +275,7 @@ async function processPullRequests(fullName, name) {
         url: pr.html_url,
         description:
           `**${pr.title}**\n\n` +
-          `*${pr.body ? pr.body.substring(0, 800) : "No description provided."}*`,
+          `*${pr.body ? (pr.body.length > 800 ? pr.body.substring(0, 800) + "…" : pr.body) : "No description provided."}*`,
         color: COLORS.PULL_REQUEST,
         thumbnail: { url: LOGO },
         fields: [
@@ -325,7 +325,7 @@ async function processIssues(fullName, name) {
         url: issue.html_url,
         description:
           `**${issue.title}**\n\n` +
-          `*${issue.body ? issue.body.substring(0, 800) : "No description provided."}*`,
+          `*${issue.body ? (issue.body.length > 800 ? issue.body.substring(0, 800) + "…" : issue.body) : "No description provided."}*`,
         color: COLORS.ISSUE,
         thumbnail: { url: LOGO },
         fields: [
@@ -453,7 +453,7 @@ async function processPushEvent(payload) {
       title: `📝 Commit \`${shortSha}\` pushed to ${repo.full_name}`,
       url: commit.url,
       description:
-        `**Message:** ${commit.message.substring(0, 1000)}\n\n` +
+        `**Message:** ${commit.message.length > 1000 ? commit.message.substring(0, 1000) + "…" : commit.message}\n\n` +
         `*Branch:* \`${branch}\` | *Pusher:* **${pusher}**`,
       color: COLORS.COMMIT,
       thumbnail: { url: LOGO },
