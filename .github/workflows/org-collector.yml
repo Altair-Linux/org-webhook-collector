@@ -1,7 +1,6 @@
 name: altair infrastructure daemon
 
 on:
-
   push:
     branches:
       - "**"
@@ -23,17 +22,11 @@ on:
     types:
       - published
 
-  workflow_run:
-    types:
-      - completed
-
   workflow_dispatch:
-
 
 concurrency:
   group: altair-org-collector
   cancel-in-progress: false
-
 
 permissions:
   contents: read
@@ -41,11 +34,8 @@ permissions:
   issues: read
   pull-requests: read
 
-
 jobs:
-
   daemon:
-
     name: altair event collector
     runs-on: ubuntu-latest
 
@@ -59,7 +49,6 @@ jobs:
       DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
 
     steps:
-
       - name: checkout repository
         uses: actions/checkout@v4
 
@@ -72,4 +61,4 @@ jobs:
         run: npm install axios
 
       - name: run altair collector daemon
-        run: node scripts/org-collector.js
+        run: node
