@@ -35,7 +35,7 @@ const fs = require("fs");
 
 /** Altair-Linux branding logo used as the embed thumbnail and bot avatar. */
 const LOGO =
-  "https://raw.githubusercontent.com/Altair-Linux/altair-branding/refs/heads/main/logos/altair-logo-monochrome.svg";
+  "https://media.discordapp.net/attachments/1481906393085906975/1482315760188657714/altair-logo-monochrome.png?ex=69b681a1&is=69b53021&hm=8532ede0d3fb2cd07e6feeb36c6e111aef0187b70569156bbc1b7da9a4ca8d5f&=&format=webp&quality=lossless&width=943&height=943";
 
 /** GitHub organisation name to monitor. */
 const ORG_NAME = "Altair-Linux";
