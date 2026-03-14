@@ -1,17 +1,17 @@
-name: Altair Linux Org Collector
+name: altair infrastructure daemon
 
 on:
 
   push:
     branches:
-      - '**'
+      - "**"
 
   pull_request:
     types:
       - opened
       - reopened
-      - closed
       - synchronize
+      - closed
 
   issues:
     types:
@@ -24,43 +24,52 @@ on:
       - published
 
   workflow_run:
-    workflows: ["*"]
     types:
       - completed
 
   workflow_dispatch:
 
+
+concurrency:
+  group: altair-org-collector
+  cancel-in-progress: false
+
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+  pull-requests: read
+
+
 jobs:
 
-  collect-events:
+  daemon:
 
+    name: altair event collector
     runs-on: ubuntu-latest
+
+    env:
+      ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+
+      DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
+      DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
+      DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
+      DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
+      DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
 
     steps:
 
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: setup node runtime
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: install runtime dependencies
         run: npm install axios
 
-      - name: Run collector
+      - name: run altair collector daemon
         run: node scripts/org-collector.js
-        env:
-
-          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
-
-          DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
-
-          DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
-
-          DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
-
-          DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
-
-          DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
