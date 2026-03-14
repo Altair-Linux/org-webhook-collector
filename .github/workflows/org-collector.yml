@@ -67,7 +67,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .dashboard-state.json
-          key: dashboard-state-
+          key: dashboard-state-${{ github.run_id }}
           restore-keys: |
             dashboard-state-
 

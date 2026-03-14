@@ -413,22 +413,21 @@ async function main() {
   const embeds = [buildHeaderEmbed(repos.length)];
 
   // Discord allows a maximum of 10 embeds per message.
-  // The first embed is the header, so we can include up to 9 repo embeds.
-  for (const { repo, ...data } of repoData.slice(0, 9)) {
+  // 1 header + up to 9 repo embeds.  When there are more than 9 repos,
+  // show 8 repo embeds and 1 overflow summary embed (total = 10).
+  const maxRepoEmbeds = repoData.length > 9 ? 8 : 9;
+
+  for (const { repo, ...data } of repoData.slice(0, maxRepoEmbeds)) {
     embeds.push(buildRepoEmbed(repo, data));
   }
 
-  if (repoData.length > 9) {
-    const remaining = repoData.slice(9).map((d) => d.repo.name);
+  if (repoData.length > maxRepoEmbeds) {
+    const remaining = repoData.slice(maxRepoEmbeds).map((d) => d.repo.name);
     embeds.push({
       description:
         `_…and **${remaining.length}** more repositories: ${remaining.join(", ")}_`,
       color: COLORS.STALE,
     });
-    // This replaces the last repo embed if we're at 10 embeds
-    if (embeds.length > 10) {
-      embeds.length = 10;
-    }
   }
 
   // ── Send or edit Discord message ──────────────────────────────────────
