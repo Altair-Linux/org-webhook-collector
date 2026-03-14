@@ -1,32 +1,66 @@
-name: Altair-Linux Org Collector
+name: Altair Linux Org Collector
 
 on:
+
+  push:
+    branches:
+      - '**'
+
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - closed
+      - synchronize
+
+  issues:
+    types:
+      - opened
+      - reopened
+      - closed
+
+  release:
+    types:
+      - published
+
+  workflow_run:
+    workflows: ["*"]
+    types:
+      - completed
+
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'  # every 5 minutes
 
 jobs:
+
   collect-events:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
         run: npm install axios
 
-      - name: Run org collector
+      - name: Run collector
         run: node scripts/org-collector.js
         env:
+
           ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+
           DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
+
           DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
+
           DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
+
           DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
+
           DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
