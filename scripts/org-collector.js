@@ -1,0 +1,9 @@
+- name: Fetch and send org events
+  run: node scripts/org-collector.js
+  env:
+    ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+    DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
+    DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
+    DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
+    DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
+    DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
