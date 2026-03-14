@@ -1,64 +1,45 @@
-name: altair infrastructure daemon
+name: Altair-Linux Org Collector
 
 on:
   push:
     branches:
       - "**"
-
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - closed
-
+    types: [opened, reopened, synchronize, closed]
   issues:
-    types:
-      - opened
-      - reopened
-      - closed
-
+    types: [opened, reopened, closed, edited]
+  issue_comment:
+    types: [created, edited]
   release:
-    types:
-      - published
-
+    types: [published]
+  create:
+  delete:
+  fork:
+  watch:
   workflow_dispatch:
 
-concurrency:
-  group: altair-org-collector
-  cancel-in-progress: false
-
-permissions:
-  contents: read
-  actions: read
-  issues: read
-  pull-requests: read
-
 jobs:
-  daemon:
-    name: altair event collector
+  collect-events:
     runs-on: ubuntu-latest
 
-    env:
-      ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
-
-      DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
-      DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
-      DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
-      DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
-      DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
-
     steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: setup node runtime
-        uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: install runtime dependencies
+      - name: Install dependencies
         run: npm install axios
 
-      - name: run altair collector daemon
-        run: node
+      - name: Run Org Collector
+        run: node scripts/org-collector.js
+        env:
+          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+          DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
+          DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
+          DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
+          DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
+          DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
