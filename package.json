@@ -1,7 +1,7 @@
 {
   "name": "altair-org-collector",
   "version": "1.0.0",
-  "description": "Collects Altair-Linux org events and posts to Discord",
+  "description": "Verbose org collector for Altair-Linux posting all events to Discord",
   "main": "scripts/org-collector.js",
   "dependencies": {
     "axios": "^1.7.0"
