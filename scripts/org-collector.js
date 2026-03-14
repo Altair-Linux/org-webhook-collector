@@ -1,9 +1,104 @@
-- name: Fetch and send org events
-  run: node scripts/org-collector.js
-  env:
-    ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
-    DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
-    DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
-    DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
-    DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
-    DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
+const axios = require('axios');
+
+const headers = {
+  Authorization: `token ${process.env.ORG_GITHUB_TOKEN}`,
+  Accept: 'application/vnd.github.v3+json'
+};
+
+async function getRepos() {
+  let repos = [], page = 1;
+  while (true) {
+    const res = await axios.get(`https://api.github.com/orgs/Altair-Linux/repos?per_page=100&page=${page}`, { headers });
+    repos = repos.concat(res.data);
+    if (res.data.length < 100) break;
+    page++;
+  }
+  return repos;
+}
+
+async function sendDiscord(webhook, embed) {
+  await axios.post(webhook, {
+    username: 'Altair Daemon',
+    avatar_url: 'https://raw.githubusercontent.com/Altair-Linux/altair-branding/refs/heads/main/logos/altair-logo-monochrome.svg',
+    embeds: [embed]
+  });
+}
+
+async function main() {
+  const repos = await getRepos();
+
+  for (const repo of repos) {
+    const { name, full_name, default_branch } = repo;
+
+    // Releases
+    try {
+      const releaseRes = await axios.get(`https://api.github.com/repos/${full_name}/releases/latest`, { headers });
+      const r = releaseRes.data;
+      if (r) await sendDiscord(process.env.DISCORD_WEBHOOK_RELEASE, {
+        title: `Release: ${r.tag_name} in ${name}`,
+        url: r.html_url,
+        description: r.name + '\n' + (r.body || ''),
+        color: 16711680,
+        footer: { text: `Altair Linux - ${name}` }
+      });
+    } catch(e){}
+
+    // Commits
+    try {
+      const commitsRes = await axios.get(`https://api.github.com/repos/${full_name}/commits?sha=${default_branch}&per_page=5`, { headers });
+      for (const commit of commitsRes.data) {
+        await sendDiscord(process.env.DISCORD_WEBHOOK_KERNEL_COMMITS, {
+          title: `Commit in ${name}`,
+          url: commit.html_url,
+          description: `${commit.commit.message}\nBy: ${commit.commit.author.name}`,
+          color: 65280,
+          footer: { text: `Altair Linux - ${name}` }
+        });
+      }
+    } catch(e){}
+
+    // Pull Requests
+    try {
+      const prsRes = await axios.get(`https://api.github.com/repos/${full_name}/pulls?state=open`, { headers });
+      for (const pr of prsRes.data) {
+        await sendDiscord(process.env.DISCORD_WEBHOOK_KERNEL_PR, {
+          title: `PR #${pr.number} in ${name}`,
+          url: pr.html_url,
+          description: pr.title + '\nBy: ' + pr.user.login,
+          color: 16753920,
+          footer: { text: `Altair Linux - ${name}` }
+        });
+      }
+    } catch(e){}
+
+    // Issues
+    try {
+      const issuesRes = await axios.get(`https://api.github.com/repos/${full_name}/issues?state=open`, { headers });
+      for (const issue of issuesRes.data.filter(i => !i.pull_request)) {
+        await sendDiscord(process.env.DISCORD_WEBHOOK_KERNEL_ISSUES, {
+          title: `Issue #${issue.number} in ${name}`,
+          url: issue.html_url,
+          description: issue.title + '\nBy: ' + issue.user.login,
+          color: 16776960,
+          footer: { text: `Altair Linux - ${name}` }
+        });
+      }
+    } catch(e){}
+
+    // Workflow runs (CI)
+    try {
+      const runsRes = await axios.get(`https://api.github.com/repos/${full_name}/actions/runs?per_page=5`, { headers });
+      for (const run of runsRes.data.workflow_runs) {
+        await sendDiscord(process.env.DISCORD_WEBHOOK_CI, {
+          title: `Workflow ${run.name} - ${run.conclusion}`,
+          url: run.html_url,
+          description: `Triggered by ${run.actor.login}`,
+          color: 255,
+          footer: { text: `Altair Linux - ${name}` }
+        });
+      }
+    } catch(e){}
+  }
+}
+
+main();
