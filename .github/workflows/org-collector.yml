@@ -59,3 +59,27 @@ jobs:
           # GitHub-provided context for event-driven processing
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
+
+      # ── Repository Dashboard ───────────────────────────────────────────
+      # Updates a single Discord message with an overview of every repo
+      # in the organisation (branches, releases, commits, PRs, issues).
+      - name: Restore Dashboard State
+        uses: actions/cache/restore@v4
+        with:
+          path: .dashboard-state.json
+          key: dashboard-state-${{ github.run_id }}
+          restore-keys: |
+            dashboard-state-
+
+      - name: Update Repository Dashboard
+        run: node scripts/dashboard.js
+        env:
+          ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+          DISCORD_WEBHOOK_DASHBOARD: ${{ secrets.DISCORD_WEBHOOK_DASHBOARD }}
+
+      - name: Save Dashboard State
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .dashboard-state.json
+          key: dashboard-state-${{ github.run_id }}
