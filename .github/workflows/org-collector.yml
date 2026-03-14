@@ -1,5 +1,15 @@
 name: Altair-Linux Org Collector
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Trigger on every event type the collector can process.
+# push            – new commits pushed to any branch
+# pull_request    – PRs opened, reopened, synchronized, or closed
+# issues          – issues opened, reopened, closed, or edited
+# release         – releases published
+# create / delete – branches or tags created / deleted
+# workflow_run    – workflow completions (for CI status reporting)
+# workflow_dispatch – manual trigger for testing
+# ─────────────────────────────────────────────────────────────────────────────
 on:
   push:
     branches:
@@ -8,14 +18,13 @@ on:
     types: [opened, reopened, synchronize, closed]
   issues:
     types: [opened, reopened, closed, edited]
-  issue_comment:
-    types: [created, edited]
   release:
     types: [published]
   create:
   delete:
-  fork:
-  watch:
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
@@ -23,23 +32,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install axios
+        run: npm install
 
       - name: Run Org Collector
         run: node scripts/org-collector.js
         env:
+          # GitHub API token for reading org repos
           ORG_GITHUB_TOKEN: ${{ secrets.ORG_GITHUB_TOKEN }}
+          # Separate Discord webhook URLs per event type
+          # NOTE: Secret names use "KERNEL_" prefix for historical reasons;
+          #       the env vars consumed by the script omit it for generality.
+          DISCORD_WEBHOOK_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
+          DISCORD_WEBHOOK_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
+          DISCORD_WEBHOOK_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
           DISCORD_WEBHOOK_RELEASE: ${{ secrets.DISCORD_WEBHOOK_RELEASE }}
-          DISCORD_WEBHOOK_KERNEL_COMMITS: ${{ secrets.DISCORD_WEBHOOK_KERNEL_COMMITS }}
-          DISCORD_WEBHOOK_KERNEL_PR: ${{ secrets.DISCORD_WEBHOOK_KERNEL_PR }}
-          DISCORD_WEBHOOK_KERNEL_ISSUES: ${{ secrets.DISCORD_WEBHOOK_KERNEL_ISSUES }}
           DISCORD_WEBHOOK_CI: ${{ secrets.DISCORD_WEBHOOK_CI }}
+          # GitHub-provided context for event-driven processing
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
